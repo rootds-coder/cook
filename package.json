@@ -1,0 +1,16 @@
+{
+  "name": "fund-source",
+  "version": "1.0.0",
+  "description": "Fund Source Application",
+  "scripts": {
+    "start": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\"",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "test": "concurrently \"cd backend && npm test\" \"cd frontend && npm test\"",
+    "test:coverage": "concurrently \"cd backend && npm run test:coverage\" \"cd frontend && npm run test:coverage\"",
+    "install:all": "concurrently \"cd backend && npm install\" \"cd frontend && npm install\"",
+    "build": "concurrently \"cd backend && npm run build\" \"cd frontend && npm run build\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
