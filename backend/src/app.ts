@@ -10,6 +10,7 @@ import newsRoutes from './routes/news';
 import helpRequestRoutes from './routes/helpRequests';
 import errorHandler from './middleware/errorHandler';
 import ApiError from './utils/ApiError';
+import { Request, Response, NextFunction } from 'express';
 
 const app = express();
 
@@ -34,7 +35,25 @@ app.use((req, res, next) => {
   next(new ApiError(404, 'Resource not found'));
 });
 
-// Error handling
-app.use(errorHandler);
+// Global Error Handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("ERROR 💥", err);
+
+  let error = err;
+  if (!(error instanceof ApiError)) {
+    const statusCode = error.statusCode || 500;
+    const message = error.message || 'Something went wrong';
+    error = new ApiError(statusCode, message, error.errors || [], err.stack);
+  }
+
+  const response = {
+    success: false,
+    message: error.message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+    ...(error.errors && error.errors.length > 0 && { errors: error.errors }),
+  };
+
+  return res.status(error.statusCode).json(response);
+});
 
 export default app;

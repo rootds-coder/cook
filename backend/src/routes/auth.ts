@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { IUser } from '../models/User';
-import { protect as verifyJWT, RequestWithUser } from '../middleware/auth';
+import { protect, RequestWithUser } from '../middleware/auth';
 import { config } from '../config';
 import UserModel from '../models/User';
 
@@ -103,7 +103,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Get current user profile
-router.get('/profile', verifyJWT, async (req: RequestWithUser, res: Response) => {
+router.get('/profile', protect, async (req: RequestWithUser, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -121,7 +121,7 @@ router.get('/profile', verifyJWT, async (req: RequestWithUser, res: Response) =>
 });
 
 // Update user profile
-router.put('/profile', verifyJWT, async (req: RequestWithUser, res: Response) => {
+router.put('/profile', protect, async (req: RequestWithUser, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -168,7 +168,7 @@ router.put('/profile', verifyJWT, async (req: RequestWithUser, res: Response) =>
 });
 
 // Change password
-router.put('/change-password', verifyJWT, async (req: RequestWithUser, res: Response) => {
+router.put('/change-password', protect, async (req: RequestWithUser, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {

@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Fund, { IFund } from '../models/Fund';
-import { ApiError } from '../utils/ApiError';
+import ApiError from '../utils/ApiError';
 import { asyncHandler } from '../utils/asyncHandler';
 
 // Get all funds

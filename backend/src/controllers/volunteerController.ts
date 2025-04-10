@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Volunteer, { IVolunteer } from '../models/Volunteer';
-import { ApiError } from '../utils/ApiError';
+import ApiError from '../utils/ApiError';
 import { asyncHandler } from '../utils/asyncHandler';
+import { RequestWithUser } from '../middleware/auth';
 
 // Get all volunteers
 export const getAllVolunteers = asyncHandler(async (req: Request, res: Response) => {
@@ -21,7 +22,7 @@ export const getVolunteerById = asyncHandler(async (req: Request, res: Response)
 });
 
 // Create new volunteer
-export const createVolunteer = asyncHandler(async (req: Request, res: Response) => {
+export const createVolunteer = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
   const { name, email, phone, skills, availability } = req.body;
 
   // Check if volunteer with email already exists
@@ -30,11 +31,13 @@ export const createVolunteer = asyncHandler(async (req: Request, res: Response) 
     throw new ApiError(400, 'Volunteer with this email already exists');
   }
 
+  const uniqueSkills = [...new Set(skills.map((skill: string) => skill.trim().toLowerCase()))];
+
   const volunteer = await Volunteer.create({
     name,
     email,
     phone,
-    skills: Array.isArray(skills) ? skills : skills.split(',').map(skill => skill.trim()),
+    skills: uniqueSkills,
     availability,
     status: 'active',
     joinedDate: new Date(),
@@ -45,7 +48,7 @@ export const createVolunteer = asyncHandler(async (req: Request, res: Response) 
 });
 
 // Update volunteer
-export const updateVolunteer = asyncHandler(async (req: Request, res: Response) => {
+export const updateVolunteer = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
   const { name, email, phone, skills, availability, status } = req.body;
   
   const volunteer = await Volunteer.findById(req.params.id);
@@ -67,7 +70,8 @@ export const updateVolunteer = asyncHandler(async (req: Request, res: Response) 
   if (email) volunteer.email = email;
   if (phone) volunteer.phone = phone;
   if (skills) {
-    volunteer.skills = Array.isArray(skills) ? skills : skills.split(',').map(skill => skill.trim());
+    const uniqueSkills = [...new Set(skills.map((skill: string) => skill.trim().toLowerCase()))];
+    volunteer.skills = uniqueSkills;
   }
   if (availability) volunteer.availability = availability;
   if (status) volunteer.status = status;

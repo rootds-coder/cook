@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Admin from '../models/Admin';
@@ -9,7 +9,7 @@ import { authenticateAdmin } from '../middleware/auth';
 const router = express.Router();
 
 // Admin Login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password } = req.body;
     
@@ -41,7 +41,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get Dashboard Stats
-router.get('/stats', authenticateAdmin, async (req, res) => {
+router.get('/stats', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const totalDonations = await Donation.countDocuments();
     const successfulDonations = await Donation.countDocuments({ status: 'completed' });
@@ -85,7 +85,7 @@ router.get('/stats', authenticateAdmin, async (req, res) => {
 });
 
 // News Management
-router.post('/news', authenticateAdmin, async (req, res) => {
+router.post('/news', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, content, summary, image, category, status } = req.body;
     const news = new News({
@@ -108,7 +108,7 @@ router.post('/news', authenticateAdmin, async (req, res) => {
   }
 });
 
-router.get('/news', authenticateAdmin, async (req, res) => {
+router.get('/news', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const news = await News.find()
       .populate('author', 'username')
@@ -120,7 +120,7 @@ router.get('/news', authenticateAdmin, async (req, res) => {
   }
 });
 
-router.put('/news/:id', authenticateAdmin, async (req, res) => {
+router.put('/news/:id', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, content, summary, image, category, status } = req.body;
     const news = await News.findByIdAndUpdate(
@@ -141,7 +141,7 @@ router.put('/news/:id', authenticateAdmin, async (req, res) => {
   }
 });
 
-router.delete('/news/:id', authenticateAdmin, async (req, res) => {
+router.delete('/news/:id', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     await News.findByIdAndDelete(req.params.id);
     res.json({ message: 'News deleted successfully' });
@@ -152,7 +152,7 @@ router.delete('/news/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Donation Management
-router.get('/donations', authenticateAdmin, async (req, res) => {
+router.get('/donations', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
     const query = status ? { status } : {};
@@ -176,7 +176,7 @@ router.get('/donations', authenticateAdmin, async (req, res) => {
   }
 });
 
-router.put('/donations/:id', authenticateAdmin, async (req, res) => {
+router.put('/donations/:id', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body;
     const donation = await Donation.findByIdAndUpdate(
@@ -192,7 +192,7 @@ router.put('/donations/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Export donation data
-router.get('/donations/export', authenticateAdmin, async (req, res) => {
+router.get('/donations/export', authenticateAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate, status } = req.query;
     const query: any = {};

@@ -7,14 +7,14 @@ import {
   deleteVolunteer,
   updateVolunteerHours,
 } from '../controllers/volunteerController';
-import { protect as verifyJWT } from '../middleware/auth';
+import { protect } from '../middleware/auth';
 // import { validateResource } from '../middleware/validateResource';
 import { createVolunteerSchema, updateVolunteerSchema, updateVolunteerHoursSchema } from '../schemas/volunteerSchema';
 
 const router = express.Router();
 
 // All routes require authentication
-router.use(verifyJWT);
+router.use(protect);
 
 // Get all volunteers and create new volunteer
 router
