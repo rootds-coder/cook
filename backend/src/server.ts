@@ -82,8 +82,9 @@ if (require.main === module) {
   const startServer = async () => {
     try {
       await connectDB();
-      app.listen(config.port, () => {
-        console.log(`Server is running on port ${config.port}`);
+      const PORT = process.env.PORT || config.port;
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
       });
     } catch (error) {
       console.error('Error starting server:', error);
