@@ -7,8 +7,8 @@ import {
   deleteVolunteer,
   updateVolunteerHours,
 } from '../controllers/volunteerController';
-import { verifyJWT } from '../middleware/auth';
-import { validateResource } from '../middleware/validateResource';
+import { protect as verifyJWT } from '../middleware/auth';
+// import { validateResource } from '../middleware/validateResource';
 import { createVolunteerSchema, updateVolunteerSchema, updateVolunteerHoursSchema } from '../schemas/volunteerSchema';
 
 const router = express.Router();
@@ -20,19 +20,21 @@ router.use(verifyJWT);
 router
   .route('/')
   .get(getAllVolunteers)
-  .post(validateResource(createVolunteerSchema), createVolunteer);
+  // .post(validateResource(createVolunteerSchema), createVolunteer);
+  .post(createVolunteer);
 
 // Get, update and delete volunteer by ID
 router
   .route('/:id')
   .get(getVolunteerById)
-  .put(validateResource(updateVolunteerSchema), updateVolunteer)
+  // .put(validateResource(updateVolunteerSchema), updateVolunteer)
+  .put(updateVolunteer)
   .delete(deleteVolunteer);
 
 // Update volunteer hours
 router.patch(
   '/:id/hours',
-  validateResource(updateVolunteerHoursSchema),
+  // validateResource(updateVolunteerHoursSchema),
   updateVolunteerHours
 );
 

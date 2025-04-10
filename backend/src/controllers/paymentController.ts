@@ -1,8 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import ApiError from '../utils/ApiError';
 import asyncHandler from '../utils/asyncHandler';
-import { Payment } from '../models/Payment';
+import Payment, { IPayment } from '../models/Payment';
 import QRCode from 'qrcode';
+import User from '../models/User';
+import { config } from '../config';
+import { RequestWithUser, AuthenticatedUser } from '../middleware/auth';
 
 // Predefined donation amounts
 const DONATION_AMOUNTS = [
@@ -62,7 +65,7 @@ export const generateQR = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+export const verifyPayment = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
     const { amount, transactionId } = req.body;
 
@@ -74,12 +77,16 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       throw new ApiError(400, 'Transaction ID is required');
     }
 
+    if (!req.user?.id) {
+        return next(new ApiError('User not authenticated or ID missing', 401));
+    }
+
     // Create payment record
     const payment = await Payment.create({
       amount,
       transactionId,
       status: 'completed',
-      userId: req.user._id
+      userId: req.user.id
     });
 
     res.json({
@@ -89,6 +96,19 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
     });
   } catch (error) {
     console.error('Payment verification error:', error);
-    throw new ApiError(500, 'Failed to verify payment');
+    next(error instanceof ApiError ? error : new ApiError(500, 'Failed to verify payment'));
   }
+});
+
+export const createPaymentIntent = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  const { amount, currency = 'usd' } = req.body;
+
+  if (!req.user?.id) {
+    return next(new ApiError('User not authenticated', 401));
+  }
+
+  const userIdCorrect = req.user.id;
+
+  // ... rest of function using userIdCorrect
+  res.status(501).json({ message: 'Payment Intent creation not fully implemented' });
 }); 

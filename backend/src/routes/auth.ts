@@ -1,18 +1,12 @@
-import express, { Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { User } from '../models/User';
-import { verifyJWT } from '../middleware/auth';
+import { IUser } from '../models/User';
+import { protect as verifyJWT, RequestWithUser } from '../middleware/auth';
 import { config } from '../config';
+import UserModel from '../models/User';
 
-const router = express.Router();
-
-// Extend Express Request type to include user
-interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-  };
-}
+const router = Router();
 
 // Login route
 router.post('/login', async (req, res) => {
@@ -20,7 +14,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await UserModel.findOne({ email });
     
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -61,7 +55,7 @@ router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
 
     // Check if user exists
-    const existingUser = await User.findOne({
+    const existingUser = await UserModel.findOne({
       $or: [{ email }, { username }]
     });
 
@@ -77,7 +71,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await User.create({
+    const user = await UserModel.create({
       username,
       email,
       password: hashedPassword
@@ -109,9 +103,13 @@ router.post('/register', async (req, res) => {
 });
 
 // Get current user profile
-router.get('/profile', verifyJWT, async (req: AuthRequest, res: Response) => {
+router.get('/profile', verifyJWT, async (req: RequestWithUser, res: Response) => {
   try {
-    const user = await User.findById(req.user?.userId).select('-password');
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const user = await UserModel.findById(userId).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -123,17 +121,21 @@ router.get('/profile', verifyJWT, async (req: AuthRequest, res: Response) => {
 });
 
 // Update user profile
-router.put('/profile', verifyJWT, async (req: AuthRequest, res: Response) => {
+router.put('/profile', verifyJWT, async (req: RequestWithUser, res: Response) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     const { username, email } = req.body;
-    const user = await User.findById(req.user?.userId);
+    const user = await UserModel.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Check if username or email is already taken by another user
-    const existingUser = await User.findOne({
+    const existingUser = await UserModel.findOne({
       $or: [
         { username, _id: { $ne: user._id } },
         { email, _id: { $ne: user._id } }
@@ -166,10 +168,14 @@ router.put('/profile', verifyJWT, async (req: AuthRequest, res: Response) => {
 });
 
 // Change password
-router.put('/change-password', verifyJWT, async (req: AuthRequest, res: Response) => {
+router.put('/change-password', verifyJWT, async (req: RequestWithUser, res: Response) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     const { currentPassword, newPassword } = req.body;
-    const user = await User.findById(req.user?.userId);
+    const user = await UserModel.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
